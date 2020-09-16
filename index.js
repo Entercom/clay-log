@@ -2,7 +2,14 @@
 
 var pino = require('pino'), // Can be overwritten for testing
   logger, // Will be overwritten during setup
-  v8;
+  v8,
+  pinoDatadog = require('pino-datadog'),
+  writeStream = pinoDatadog.createWriteStreamSync({
+    apiKey: process.env.DD_API_KEY,
+    service: process.env.DD_SERVICE,
+    hostname: process.env.CLAY_SITE_HOST,
+    ddsource: process.env.DD_SOURCE
+  });
 
 try {
   v8 = require(require.resolve('v8'));
@@ -17,6 +24,9 @@ try {
  * @return {stream}
  */
 function getOutput(args) {
+  if (process.env.NODE_ENV === 'production' && process.env.DD_API_KEY !== '') {
+    return writeStream;
+  }
   return args.output || process.stdout;
 }
 
